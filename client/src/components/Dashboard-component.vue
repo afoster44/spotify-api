@@ -3,19 +3,26 @@
       <div class="row">
           <div class="col-sm-12">
               <h1>Song Search</h1>
-              <input type="text">
+              <div>
+              <input type="text" v-model="state.search">
+              {{state.search}}
+              </div>
+              <div>
+                  <h1>access token</h1>
               {{state.accessToken}}
+              </div>
+              <div>
+                  <h1>refresh token</h1>
               {{state.refreshToken}}
-              <p>{{state.expiresIn}}</p>
+              </div>
+              <p> expires in : {{state.expiresIn}}</p>
           </div>
       </div>
   </div>
 </template>
 
 <script>
-import { AuthService } from '../services/AuthService'
-import { AppState } from '../AppState'
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, onUpdated, reactive, watch } from 'vue'
 import { api } from '../services/AxiosService'
 export default {
     props : {
@@ -29,7 +36,8 @@ export default {
           code: new URLSearchParams(window.location.search).get('code'),
           accessToken: '',
           refreshToken: '',
-          expiresIn: ''
+          expiresIn: 0,
+          search: ''
       })
       console.log('dashboard component code', state.code)
       console.log('hello')
@@ -42,9 +50,34 @@ export default {
               state.expiresIn = res.data.expiresIn
               window.history.pushState({}, null, '/')
           }
+              return state.accessToken, state.refreshToken, state.expiresIn
       })
+      onUpdated(() => {
+          if(!state.expiresIn || !state.refreshToken) return
+          const interval = setInterval(() => {
+              const res = api.post('/refresh', {refreshToken: state.refreshToken})
+              console.log(res.data)
+          }, (state.expiresIn - 60) * 1000)
+          return () => clearInterval(interval)
+      })
+    //   const refresh = async() => {
+    //       if(!state.expiresIn || !state.refreshToken) return
+    //       const interval = setInterval(() => {
+    //           const res = await api.post('/refresh', {refreshToken: state.refreshToken})
+    //           console.log(res.data)
+    //       }, (state.expiresIn - 60) * 1000)
+    //       return () => clearInterval(interval)
+    //   }()
     return {
         state,
+        refresh : function (){
+          if(!state.expiresIn || !state.refreshToken) return
+          const interval = setInterval(() => {
+              const res = api.post('/refresh', {refreshToken: state.refreshToken})
+              console.log(res.data)
+          }, (state.expiresIn - 60) * 1000)
+          return () => clearInterval(interval)
+      }()
 //         GET : async function(){
 //     var get = {},
 //     // the add function turns a key into an

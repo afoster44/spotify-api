@@ -12,7 +12,6 @@ app.use(bodyParser.json())
 const CLIENT_ID = '83cd894c8d2646bab7384165d5be00ba'
 const CLIENT_SECRET = 'f6b55880f6df440ca23c54196b3be157'
 const REDIRECT_URI = 'http://localhost:8080/Dashboard'
-const axiosUrl = "https://accounts.spotify.com/"
 
 app.post('/login', async (req, res) => {
     console.log('logging the request', req.body)
@@ -34,6 +33,24 @@ app.post('/login', async (req, res) => {
         })
     } catch (e) {
         console.error(e);
+    }
+})
+
+app.post('/refresh', async (req, res) => {
+    console.log('refresh')
+    const authCodeProof = {
+        grant_type: 'refresh_token',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        refresh_token: req.body.refreshToken
+    }
+    try {
+        const responseBody = await axios.post('https://accounts.spotify.com/api/token', querystring.stringify(authCodeProof))
+        console.log(responseBody.data)
+        res.send('successful trade of refresh token for access token')
+    } catch (e) {
+        console.log(e)
     }
 })
 
