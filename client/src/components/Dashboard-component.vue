@@ -16,6 +16,8 @@
               {{state.refreshToken}}
               </div>
               <p> expires in : {{state.expiresIn}}</p>
+              <!-- will need to clean up this v-for -->
+              <Player v-for="result in state.searchResults" :key="result.id" :searchResult="result"/>
           </div>
       </div>
   </div>
