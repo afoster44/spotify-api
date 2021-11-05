@@ -24,6 +24,9 @@
 <script>
 import { computed, onMounted, onUpdated, reactive, watch } from 'vue'
 import { api } from '../services/AxiosService'
+import SpotifyWebApi from 'spotify-web-api-node'
+import { AppState } from '../AppState'
+
 export default {
     props : {
         code: {
@@ -37,7 +40,11 @@ export default {
           accessToken: '',
           refreshToken: '',
           expiresIn: 0,
-          search: ''
+          search: '',
+          searchResults: computed(() => AppState.searchResults),
+          spotifyApi: new SpotifyWebApi({
+              clientId: '83cd894c8d2646bab7384165d5be00ba'
+          })
       })
       console.log('dashboard component code', state.code)
       console.log('hello')
@@ -59,6 +66,16 @@ export default {
               console.log(res.data)
           }, (state.expiresIn - 60) * 1000)
           return () => clearInterval(interval)
+      })
+      onUpdated(() => {
+          if(!state.accessToken) return 
+              state.spotifyApi.setAccessToken(state.accessToken)
+      })
+      onUpdated(async () => {
+          if(!state.search) return AppState.searchResults
+          if(!state.accessToken) return
+          const res = await state.spotifyApi.searchTracks(state.search)
+          console.log(res)
       })
     //   const refresh = async() => {
     //       if(!state.expiresIn || !state.refreshToken) return
